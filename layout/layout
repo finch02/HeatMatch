@@ -1,0 +1,73 @@
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Home, Calculator, Users, Settings, Zap } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+const navigationItems = [
+  {
+    title: "Startseite",
+    url: createPageUrl("Home"),
+    icon: Home,
+  },
+  {
+    title: "Energieberatung",
+    url: createPageUrl("Wizard"),
+    icon: Calculator,
+  },
+  {
+    title: "Meine Projekte",
+    url: createPageUrl("Dashboard"),
+    icon: Settings,
+  },
+  {
+    title: "Experten finden",
+    url: createPageUrl("Contractors"),
+    icon: Users,
+  },
+];
+
+export default function Layout({ children, currentPageName }) {
+  const location = useLocation();
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-cyan-50/20">
+      <style>{`
+        :root {
+          --primary: 4 120 87;
+          --primary-foreground: 255 255 255;
+          --secondary: 14 165 233; /* Cyan/Sky Blue */
+          --background: 255 255 255;
+          --foreground: 15 23 42;
+          --muted: 248 250 252;
+          --border: 226 232 240;
+          --card: 255 255 255;
+        }
+      `}</style>
+
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <Sidebar className="border-r border-slate-200/60 bg-white/80 backdrop-blur-xl">
+            <SidebarHeader className="border-b border-slate-200/60 p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-xl text-slate-900">HeatMatch</h2>
+                  <p className="text-xs text-slate-500 font-medium">Energieberatung der Zukunft</p>
+                </div>
+ 
