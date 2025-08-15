@@ -1,0 +1,193 @@
+import React, { useState, useEffect } from "react";
+import { Property } from "@/entities/Property";
+import { Recommendation } from "@/entities/Recommendation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Plus, Home, TrendingUp, Zap, Calendar, Eye, Leaf } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function Dashboard() {
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  const loadProperties = async () => {
+    try {
+      const propertiesData = await Property.list("-created_date");
+      setProperties(propertiesData);
+    } catch (error) {
+      console.error("Error loading properties:", error);
+    }
+    setLoading(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+            <p className="text-slate-600 mt-1">Überblick über Ihre Energieberatungen</p>
+          </div>
+          <Link to={createPageUrl("Wizard")}>
+            <Button className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
+              <Plus className="w-4 h-4 mr-2" />
+              Neue Beratung starten
+            </Button>
+          </Link>
+        </div>
+
+        {properties.length === 0 ? (
+          /* Empty State */
+          <div className="text-center py-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-slate-100 to-slate-200 rounded-full flex items-center justify-center">
+                <Home className="w-10 h-10 text-slate-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">
+                Noch keine Beratungen vorhanden
+              </h2>
+              <p className="text-slate-600 mb-8 max-w-md mx-auto">
+                Starten Sie Ihre erste Energieberatung und entdecken Sie 
+                das Einsparpotential Ihres Zuhauses.
+              </p>
+              <Link to={createPageUrl("Wizard")}>
+                <Button size="lg" className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
+                  <Zap className="w-5 h-5 mr-2" />
+                  Erste Beratung starten
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        ) : (
+          /* Properties Grid */
+          <div className="space-y-8">
+            <div className="grid lg:grid-cols-4 gap-6">
+              <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Home className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-600">Beratungen</span>
+                  </div>
+                  <div className="text-2xl font-bold text-emerald-700">{properties.length}</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <TrendingUp className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-600">Durchschn. Einsparung</span>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-700">€2.400</div>
+                  <div className="text-xs text-blue-600 mt-1">pro Jahr</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Leaf className="w-5 h-5 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-600">CO₂-Reduktion</span>
+                  </div>
+                  <div className="text-2xl font-bold text-emerald-700">3.2t</div>
+                  <div className="text-xs text-emerald-600 mt-1">pro Jahr</div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Calendar className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-600">Letzte Beratung</span>
+                  </div>
+                  <div className="text-lg font-bold text-purple-700">Heute</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-6">Ihre Projekte</h2>
+              <div className="grid gap-6">
+                {properties.map((property, index) => (
+                  <motion.div
+                    key={property.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <Card className="hover:shadow-lg transition-all duration-300 border-slate-200">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-xl text-slate-900">
+                              {property.building_type.charAt(0).toUpperCase() + property.building_type.slice(1).replace('_', ' ')}
+                            </CardTitle>
+                            <p className="text-slate-600 text-sm mt-1">
+                              {property.living_space}m² • Baujahr {property.construction_year} • PLZ {property.postal_code}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-slate-500">
+                              {new Date(property.created_date).toLocaleDateString('de-DE')}
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-4 gap-4 mb-4">
+                          <div className="text-center p-3 bg-slate-50 rounded-lg">
+                            <div className="text-lg font-bold text-slate-700">{property.heating_system}</div>
+                            <div className="text-xs text-slate-500">Heizung</div>
+                          </div>
+                          <div className="text-center p-3 bg-slate-50 rounded-lg">
+                            <div className="text-lg font-bold text-slate-700">{property.insulation_standard}</div>
+                            <div className="text-xs text-slate-500">Dämmung</div>
+                          </div>
+                          <div className="text-center p-3 bg-slate-50 rounded-lg">
+                            <div className="text-lg font-bold text-slate-700">{property.roof_type || 'N/A'}</div>
+                            <div className="text-xs text-slate-500">Dachform</div>
+                          </div>
+                          <div className="text-center p-3 bg-slate-50 rounded-lg">
+                            <div className="text-lg font-bold text-slate-700">{property.roof_orientation || 'N/A'}</div>
+                            <div className="text-xs text-slate-500">Ausrichtung</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end">
+                          <Link to={createPageUrl(`Results?propertyId=${property.id}`)}>
+                            <Button className="bg-emerald-600 hover:bg-emerald-700">
+                              <Eye className="w-4 h-4 mr-2" />
+                              Ergebnisse anzeigen
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
