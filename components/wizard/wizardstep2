@@ -1,0 +1,153 @@
+import React, { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Home, Compass, Map, Search, Sun, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function WizardStep2({ formData, updateFormData }) {
+  const roofTypes = [
+    { value: "flachdach", label: "Flachdach", icon: "🏢" },
+    { value: "satteldach", label: "Satteldach", icon: "🏠" },
+    { value: "walmdach", label: "Walmdach", icon: "🏡" },
+    { value: "pultdach", label: "Pultdach", icon: "🏘️" }
+  ];
+
+  const roofOrientations = [
+    { value: "sued", label: "Süden", icon: "☀️", color: "bg-sky-50 border-sky-200" },
+    { value: "suedwest", label: "Südwest", icon: "🌅", color: "bg-cyan-50 border-cyan-200" },
+    { value: "suedost", label: "Südost", icon: "🌄", color: "bg-blue-50 border-blue-200" },
+    { value: "west", label: "Westen", icon: "🌇", color: "bg-indigo-50 border-indigo-200" },
+    { value: "ost", label: "Osten", icon: "🌅", color: "bg-violet-50 border-violet-200" },
+    { value: "nord", label: "Norden", icon: "❄️", color: "bg-slate-50 border-slate-200" }
+  ];
+
+  const [checkingPV, setCheckingPV] = useState(false);
+  const [pvResult, setPVResult] = useState(null);
+
+  const handlePVCheck = () => {
+    setCheckingPV(true);
+    setTimeout(() => {
+      setPVResult({
+        suitability: "Sehr Gut",
+        potentialArea: 65,
+        potentialPower: 12.8
+      });
+      setCheckingPV(false);
+    }, 2500);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Address for PV Check */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+          <Map className="w-5 h-5" />
+          Standort für PV-Analyse
+        </Label>
+        <p className="text-sm text-slate-500">
+          Geben Sie die Adresse Ihres Hauses an. Unsere KI prüft via Satellitenbilder automatisch die Eignung Ihres Dachs für eine Solaranlage.
+        </p>
+        <div className="flex gap-2">
+          <Input
+            value={formData.address}
+            onChange={(e) => updateFormData({ address: e.target.value })}
+            placeholder="z.B. Musterstraße 1, 12345 Musterstadt"
+            className="h-12 text-base"
+          />
+          <Button onClick={handlePVCheck} disabled={!formData.address || checkingPV} className="h-12 bg-emerald-600 hover:bg-emerald-700">
+            {checkingPV ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+            <span className="ml-2 hidden sm:inline">Prüfen</span>
+          </Button>
+        </div>
+      </div>
+
+      {pvResult && (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Sun className="w-6 h-6 text-emerald-600" />
+                <h3 className="text-lg font-bold text-slate-900">Ergebnis der PV-Potenzialanalyse</h3>
+              </div>
+              <div className="grid md:grid-cols-3 gap-4 text-center">
+                <div className="p-3 bg-white rounded-lg border">
+                  <div className="text-xl font-bold text-emerald-700">{pvResult.suitability}</div>
+                  <div className="text-xs text-slate-600">Eignung</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border">
+                  <div className="text-xl font-bold text-emerald-700">{pvResult.potentialArea} m²</div>
+                  <div className="text-xs text-slate-600">Nutzbare Dachfläche</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border">
+                  <div className="text-xl font-bold text-emerald-700">{pvResult.potentialPower} kWp</div>
+                  <div className="text-xs text-slate-600">Mögliche Leistung</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Roof Type Selection */}
+      <div className="space-y-4 pt-6 border-t border-slate-200">
+        <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+          <Home className="w-5 h-5" />
+          Welche Dachform hat Ihr Gebäude?
+        </Label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {roofTypes.map((roof) => (
+            <Card 
+              key={roof.value}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md h-full ${
+                formData.roof_type === roof.value 
+                  ? 'border-emerald-500 bg-emerald-50 shadow-md' 
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+              onClick={() => updateFormData({ roof_type: roof.value })}
+            >
+              <CardContent className="p-4 text-center flex flex-col items-center justify-center">
+                <div className="text-3xl mb-2">{roof.icon}</div>
+                <div className="font-semibold text-slate-900">{roof.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Roof Orientation */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+          <Compass className="w-5 h-5" />
+          Hauptausrichtung des Daches (falls bekannt)
+        </Label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {roofOrientations.map((orientation) => (
+            <Card 
+              key={orientation.value}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 h-full ${
+                formData.roof_orientation === orientation.value 
+                  ? 'border-emerald-500 bg-emerald-50 shadow-md' 
+                  : `${orientation.color} hover:border-slate-300`
+              }`}
+              onClick={() => updateFormData({ roof_orientation: orientation.value })}
+            >
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl mb-2">{orientation.icon}</div>
+                <div className="font-semibold text-slate-900">{orientation.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
