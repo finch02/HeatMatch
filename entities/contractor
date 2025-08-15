@@ -1,0 +1,73 @@
+{
+  "name": "Contractor",
+  "type": "object",
+  "properties": {
+    "company_name": {
+      "type": "string",
+      "description": "Firmenname"
+    },
+    "contact_person": {
+      "type": "string",
+      "description": "Ansprechpartner"
+    },
+    "specialties": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "daemmung",
+          "heizung",
+          "solar",
+          "fenster",
+          "energieberatung"
+        ]
+      },
+      "description": "Fachbereiche des Handwerkers"
+    },
+    "postal_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Abgedeckte Postleitzahlen"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefonnummer"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "E-Mail-Adresse"
+    },
+    "website": {
+      "type": "string",
+      "description": "Website URL"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Durchschnittsbewertung"
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Zertifikate und Qualifikationen"
+    },
+    "description": {
+      "type": "string",
+      "description": "Firmenbeschreibung"
+    }
+  },
+  "required": [
+    "company_name",
+    "contact_person",
+    "specialties",
+    "postal_codes",
+    "phone",
+    "email"
+  ]
+}
