@@ -1,0 +1,91 @@
+import React from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Euro, Leaf, Clock, Gift, TrendingUp, Info } from "lucide-react";
+
+const measureIcons = {
+  heizung_waermepumpe: "🔥",
+  daemmung_dach: "🏠",
+  daemmung_fassade: "🧱",
+  daemmung_keller: "⬇️",
+  fenster_tausch: "🪟",
+  solaranlage: "☀️",
+  batteriespeicher: "🔋"
+};
+
+const priorityColors = {
+  high: "bg-red-100 text-red-700 border-red-200",
+  medium: "bg-sky-100 text-sky-700 border-sky-200",
+  low: "bg-slate-100 text-slate-700 border-slate-200"
+};
+
+const priorityLabels = {
+  high: "Hohe Priorität",
+  medium: "Mittlere Priorität",
+  low: "Niedrige Priorität"
+};
+
+export default function RecommendationCard({ recommendation, isSelected, onToggle }) {
+  return (
+    <Card className={`transition-all duration-300 border-2 ${isSelected ? 'border-emerald-300 bg-white' : 'border-slate-200 bg-slate-50 opacity-70'}`}>
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-3xl bg-slate-100 p-3 rounded-lg">{measureIcons[recommendation.measure_type] || "🔧"}</div>
+            <div>
+              <h3 className="font-bold text-xl text-slate-900">{recommendation.title}</h3>
+              <p className="text-slate-600 mt-1">{recommendation.description}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant="outline" className={priorityColors[recommendation.priority]}>
+                {priorityLabels[recommendation.priority]}
+            </Badge>
+            <Switch
+                checked={isSelected}
+                onCheckedChange={onToggle}
+                aria-label={`Maßnahme ${recommendation.title} auswählen`}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+            <div className="text-sm text-green-600">Einsparung</div>
+            <div className="text-lg font-bold text-green-700">€{recommendation.annual_savings.toLocaleString()}/Jahr</div>
+          </div>
+          
+          <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+             <div className="text-sm text-blue-600">Investition</div>
+            <div className="text-lg font-bold text-blue-700">€{recommendation.investment_cost.toLocaleString()}</div>
+          </div>
+          
+          <div className="text-center p-3 bg-sky-50 rounded-lg border border-sky-200">
+            <div className="text-sm text-sky-600">Amortisation</div>
+            <div className="text-lg font-bold text-sky-700">{recommendation.payback_years} Jahre</div>
+          </div>
+          
+          <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+            <div className="text-sm text-emerald-600">CO₂/Jahr</div>
+            <div className="text-lg font-bold text-emerald-700">{(recommendation.co2_reduction/1000).toFixed(1)}t</div>
+          </div>
+        </div>
+
+        {/* Funding Information */}
+        {recommendation.funding_available && (
+          <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Gift className="w-5 h-5 text-violet-600" />
+              <span className="font-semibold text-violet-700">Förderung verfügbar</span>
+            </div>
+            <p className="text-sm text-violet-600">{recommendation.funding_details}</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
