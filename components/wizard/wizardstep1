@@ -1,0 +1,192 @@
+
+import React, { useState } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Home, Calendar, Ruler, Zap, Flame, MapPin, Users, HelpCircle, Lightbulb } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+
+export default function WizardStep1({ formData, updateFormData, canProceed }) {
+  const [showEstimator, setShowEstimator] = useState(false);
+  const [estimatorPeople, setEstimatorPeople] = useState(2);
+  const [estimatorHotWater, setEstimatorHotWater] = useState('central');
+
+  const buildingTypes = [
+    { value: "einfamilienhaus", label: "Einfamilienhaus", icon: "🏠" },
+    { value: "mehrfamilienhaus", label: "Mehrfamilienhaus", icon: "🏢" },
+    { value: "reihenhaus", label: "Reihenhaus", icon: "🏘️" },
+    { value: "doppelhaus", label: "Doppelhaushälfte", icon: "🏡" },
+    { value: "wohnung", label: "Eigentumswohnung", icon: "🏠" }
+  ];
+
+  const insulationLevels = [
+    { value: "unsaniert", label: "Unsaniert (vor 1980)", color: "bg-red-50 border-red-200 text-red-700" },
+    { value: "teilsaniert", label: "Teilsaniert", color: "bg-sky-50 border-sky-200 text-sky-700" },
+    { value: "vollsaniert", label: "Vollsaniert", color: "bg-blue-50 border-blue-200 text-blue-700" },
+    { value: "neubaustandard", label: "Neubaustandard", color: "bg-green-50 border-green-200 text-green-700" },
+    { value: "passivhaus", label: "Passivhaus", color: "bg-emerald-50 border-emerald-200 text-emerald-700" }
+  ];
+
+  const heatingSystems = [
+    { value: "gas", label: "Gasheizung", icon: "🔥" },
+    { value: "oil", label: "Ölheizung", icon: "⛽" },
+    { value: "strom", label: "Elektroheizung", icon: "⚡" },
+    { value: "fernwaerme", label: "Fernwärme", icon: "🏭" },
+    { value: "waermepumpe", label: "Wärmepumpe", icon: "♨️" },
+    { value: "pellets", label: "Pelletheizung", icon: "🌰" },
+    { value: "solar", label: "Solarthermie", icon: "☀️" }
+  ];
+
+  const handleEstimate = () => {
+    // Stromverbrauch schätzen
+    let estimatedElectricity = 1500 + (estimatorPeople - 1) * 800;
+    if (estimatorHotWater === 'electric') {
+        estimatedElectricity += estimatorPeople * 600;
+    }
+    
+    // Heizverbrauch schätzen (kWh/m²/a)
+    const demandFactors = {
+        unsaniert: 200, teilsaniert: 120, vollsaniert: 70, neubaustandard: 50, passivhaus: 15
+    };
+    const factor = demandFactors[formData.insulation_standard] || 150; // Default if insulation_standard is not set
+    const estimatedHeating = (formData.living_space || 150) * factor; // Default living_space if not set
+
+    updateFormData({
+        electricity_consumption: Math.round(estimatedElectricity),
+        heating_consumption: Math.round(estimatedHeating),
+        heating_consumption_unit: 'kwh'
+    });
+    setShowEstimator(false);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Building Type Selection */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+          <Home className="w-5 h-5" />
+          Was für ein Gebäude haben Sie?
+        </Label>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {buildingTypes.map((type) => (
+            <Card 
+              key={type.value}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                formData.building_type === type.value 
+                  ? 'border-emerald-500 bg-emerald-50' 
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+              onClick={() => updateFormData({ building_type: type.value })}
+            >
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl mb-2">{type.icon}</div>
+                <div className="font-medium text-slate-900">{type.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Construction Year, Living Space, Postal Code */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="space-y-2">
+          <Label className="text-base font-semibold text-slate-700 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Baujahr
+          </Label>
+          <Input
+            type="number"
+            min="1900"
+            max="2024"
+            value={formData.construction_year}
+            onChange={(e) => updateFormData({ construction_year: e.target.value })}
+            placeholder="z.B. 1985"
+            className="h-12 text-base"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label className="text-base font-semibold text-slate-700 flex items-center gap-2">
+            <Ruler className="w-4 h-4" />
+            Wohnfläche (m²)
+          </Label>
+          <Input
+            type="number"
+            min="20"
+            max="1000"
+            value={formData.living_space}
+            onChange={(e) => updateFormData({ living_space: e.target.value })}
+            placeholder="z.B. 150"
+            className="h-12 text-base"
+          />
+        </div>
+
+        <div className="space-y-2">
+            <Label className="text-base font-semibold text-slate-700 flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Postleitzahl
+            </Label>
+            <Input
+                value={formData.postal_code}
+                onChange={(e) => updateFormData({ postal_code: e.target.value })}
+                placeholder="z.B. 10115"
+                maxLength="5"
+                pattern="[0-9]{5}"
+                className="h-12 text-base"
+            />
+        </div>
+      </div>
+
+      {/* Heating System */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-slate-700">
+          Welches Heizsystem nutzen Sie derzeit?
+        </Label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {heatingSystems.map((system) => (
+            <Card 
+              key={system.value}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                formData.heating_system === system.value 
+                  ? 'border-emerald-500 bg-emerald-50' 
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+              onClick={() => updateFormData({ heating_system: system.value })}
+            >
+              <CardContent className="p-3 text-center">
+                <div className="text-lg mb-1">{system.icon}</div>
+                <div className="text-sm font-medium text-slate-900">{system.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Insulation Standard */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-slate-700">
+          Wie ist der Dämmstandard Ihres Gebäudes?
+        </Label>
+        <div className="grid gap-3">
+          {insulationLevels.map((level) => (
+            <Card 
+              key={level.value}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                formData.insulation_standard === level.value 
+                  ? 'border-emerald-500 bg-emerald-50' 
+                  : `${level.color} hover:border-slate-400`
+              }`}
+              onClick={() => updateFormData({ insulation_standard: level.value })}
+            >
+              <CardContent className="p-4">
+                <div className="font-semibold">{level.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Energy Consumption Section */}
+      <motion.div 
