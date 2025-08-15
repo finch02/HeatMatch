@@ -1,0 +1,74 @@
+{
+  "name": "Recommendation",
+  "type": "object",
+  "properties": {
+    "property_id": {
+      "type": "string",
+      "description": "ID der zugehörigen Immobilie"
+    },
+    "measure_type": {
+      "type": "string",
+      "enum": [
+        "daemmung_dach",
+        "daemmung_fassade",
+        "daemmung_keller",
+        "fenster_tausch",
+        "heizung_waermepumpe",
+        "heizung_gas",
+        "solaranlage",
+        "batteriespeicher"
+      ],
+      "description": "Art der Sanierungsmaßnahme"
+    },
+    "title": {
+      "type": "string",
+      "description": "Titel der Maßnahme"
+    },
+    "description": {
+      "type": "string",
+      "description": "Beschreibung der Maßnahme"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "description": "Priorität der Maßnahme"
+    },
+    "investment_cost": {
+      "type": "number",
+      "description": "Geschätzte Investitionskosten in Euro"
+    },
+    "annual_savings": {
+      "type": "number",
+      "description": "Geschätzte jährliche Einsparung in Euro"
+    },
+    "payback_years": {
+      "type": "number",
+      "description": "Amortisationsdauer in Jahren"
+    },
+    "co2_reduction": {
+      "type": "number",
+      "description": "CO2-Einsparung in kg pro Jahr"
+    },
+    "funding_available": {
+      "type": "boolean",
+      "description": "Ob Förderung verfügbar ist"
+    },
+    "funding_details": {
+      "type": "string",
+      "description": "Details zur verfügbaren Förderung"
+    }
+  },
+  "required": [
+    "property_id",
+    "measure_type",
+    "title",
+    "description",
+    "priority",
+    "investment_cost",
+    "annual_savings"
+  ]
+}
