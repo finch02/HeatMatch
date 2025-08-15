@@ -1,0 +1,134 @@
+{
+  "name": "Property",
+  "type": "object",
+  "properties": {
+    "building_type": {
+      "type": "string",
+      "enum": [
+        "einfamilienhaus",
+        "mehrfamilienhaus",
+        "reihenhaus",
+        "doppelhaus",
+        "wohnung"
+      ],
+      "description": "Art des Gebäudes"
+    },
+    "construction_year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2024,
+      "description": "Baujahr des Gebäudes"
+    },
+    "living_space": {
+      "type": "number",
+      "minimum": 20,
+      "maximum": 1000,
+      "description": "Wohnfläche in Quadratmetern"
+    },
+    "heating_system": {
+      "type": "string",
+      "enum": [
+        "gas",
+        "oil",
+        "strom",
+        "fernwaerme",
+        "waermepumpe",
+        "pellets",
+        "solar"
+      ],
+      "description": "Aktuelles Heizsystem"
+    },
+    "electricity_consumption": {
+      "type": "number",
+      "description": "Jährlicher Stromverbrauch in kWh (optional)"
+    },
+    "heating_consumption": {
+      "type": "number",
+      "description": "Jährlicher Heizenergieverbrauch (optional)"
+    },
+    "heating_consumption_unit": {
+      "type": "string",
+      "enum": [
+        "kwh",
+        "m3_gas",
+        "liter_oil"
+      ],
+      "description": "Einheit des Heizverbrauchs (optional)"
+    },
+    "insulation_standard": {
+      "type": "string",
+      "enum": [
+        "unsaniert",
+        "teilsaniert",
+        "vollsaniert",
+        "neubaustandard",
+        "passivhaus"
+      ],
+      "description": "Dämmstandard des Gebäudes"
+    },
+    "address": {
+      "type": "string",
+      "description": "Vollständige Adresse für PV-Analyse (optional)"
+    },
+    "postal_code": {
+      "type": "string",
+      "pattern": "^[0-9]{5}$",
+      "description": "Postleitzahl"
+    },
+    "roof_type": {
+      "type": "string",
+      "enum": [
+        "flachdach",
+        "satteldach",
+        "walmdach",
+        "pultdach"
+      ],
+      "description": "Dachform"
+    },
+    "roof_orientation": {
+      "type": "string",
+      "enum": [
+        "sued",
+        "suedwest",
+        "suedost",
+        "west",
+        "ost",
+        "nord"
+      ],
+      "description": "Hauptausrichtung des Dachs"
+    },
+    "floorplan_url": {
+      "type": "string",
+      "description": "URL zum hochgeladenen Grundriss (optional)"
+    },
+    "detail_photo_urls": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": "URLs zu Detailfotos, nach Kategorien gruppiert (optional)"
+    },
+    "analysis_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "analyzing",
+        "completed",
+        "error"
+      ],
+      "default": "pending",
+      "description": "Status der KI-Analyse"
+    }
+  },
+  "required": [
+    "building_type",
+    "construction_year",
+    "living_space",
+    "heating_system",
+    "insulation_standard",
+    "postal_code"
+  ]
+}
