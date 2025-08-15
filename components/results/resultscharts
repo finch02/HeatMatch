@@ -1,0 +1,61 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { TrendingUp, BarChart2, PieChart as PieIcon } from 'lucide-react';
+
+const COLORS = ['#059669', '#0284c7', '#4f46e5', '#7c3aed', '#db2777'];
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white/80 backdrop-blur-sm p-3 border border-slate-200 rounded-lg shadow-lg">
+        <p className="font-bold text-slate-800">{label}</p>
+        {payload.map(pld => (
+            <p key={pld.dataKey} style={{ color: pld.color }}>
+                {pld.name}: {pld.value.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+            </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+export default function ResultsCharts({ recommendations }) {
+  if (!recommendations || recommendations.length === 0) {
+    return null; // Don't render anything if there are no recommendations
+  }
+
+  const chartData = recommendations.map(rec => ({
+    name: rec.title,
+    Investition: rec.investment_cost,
+    Einsparung: rec.annual_savings,
+  }));
+
+  const pieData = recommendations.map((rec, index) => ({
+    name: rec.title,
+    value: rec.investment_cost,
+    fill: COLORS[index % COLORS.length]
+  }));
+  
+  const totalInvestment = recommendations.reduce((sum, rec) => sum + rec.investment_cost, 0);
+  const cumulativeSavingsData = Array.from({ length: 21 }, (_, i) => {
+    const year = i;
+    const totalSavings = recommendations.reduce((sum, rec) => {
+        // Only add savings if investment is paid off
+        if (year * rec.annual_savings >= rec.investment_cost) {
+            return sum + (year * rec.annual_savings) - rec.investment_cost;
+        }
+        return sum;
+    }, 0);
+    return { name: `Jahr ${year}`, "Netto-Ersparnis": totalSavings, "Investition": totalInvestment };
+  });
+
+  return (
+    <div className="space-y-8 my-8">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-slate-700" />
+            Investition vs. Jährliche Einsparung
+ 
