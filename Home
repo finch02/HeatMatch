@@ -1,0 +1,216 @@
+import React from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight, Zap, TrendingUp, Users, Shield, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function Home() {
+  const benefits = [
+    {
+      icon: TrendingUp,
+      title: "Bis zu 70% Energiekosten sparen",
+      description: "Reduzieren Sie Ihre Heizkosten durch intelligente Sanierung"
+    },
+    {
+      icon: Shield,
+      title: "KI-gestützte Analyse",
+      description: "Präzise Empfehlungen basierend auf Ihren Gebäudedaten"
+    },
+    {
+      icon: Users,
+      title: "Geprüfte Experten",
+      description: "Qualifizierte Handwerker und Energieberater in Ihrer Nähe"
+    }
+  ];
+
+  const steps = [
+    {
+      number: "01",
+      title: "Gebäude & Verbrauch",
+      description: "Basisdaten & optional Energieverbrauch eingeben"
+    },
+    {
+      number: "02", 
+      title: "Dach & Standort",
+      description: "Adresse für automatische PV-Analyse angeben"
+    },
+    {
+      number: "03",
+      title: "Grundriss & Fotos",
+      description: "Pläne & Detailfotos für die KI-Analyse hochladen"
+    },
+    {
+      number: "04",
+      title: "Empfehlungen erhalten",
+      description: "Maßgeschneiderten Sanierungsplan erhalten"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative px-6 py-20 lg:py-32">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 via-transparent to-cyan-500/10 pointer-events-none" />
+        <div className="max-w-7xl mx-auto relative">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-4xl mx-auto"
+          >
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold mb-6 border border-emerald-200">
+              <Zap className="w-4 h-4" />
+              Deutschlands modernste Energieberatung
+            </div>
+            <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 mb-8 leading-tight">
+              Energiekosten
+              <span className="text-transparent bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text"> senken</span>
+              <br />mit KI-Beratung
+            </h1>
+            <p className="text-xl text-slate-600 mb-12 leading-relaxed max-w-2xl mx-auto">
+              Erhalten Sie in wenigen Minuten eine professionelle Energieberatung für Ihr Zuhause. 
+              Unsere KI analysiert Ihren Grundriss und empfiehlt die besten Sanierungsmaßnahmen.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to={createPageUrl("Wizard")}>
+                <Button size="lg" className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                  Kostenlose Analyse starten
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Button variant="outline" size="lg" className="px-8 py-4 text-lg font-semibold rounded-xl border-slate-300 hover:bg-slate-50 transition-all duration-300">
+                Mehr erfahren
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="px-6 py-20 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">
+              Warum HeatMatch?
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Moderne Technologie trifft auf jahrzehntelange Erfahrung in der Energieberatung
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={benefit.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                <Card className="h-full border-slate-200 hover:border-emerald-300 transition-all duration-300 hover:shadow-lg group">
+                  <CardHeader className="text-center pb-4">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-2xl flex items-center justify-center group-hover:from-emerald-100 group-hover:to-emerald-200 transition-all duration-300">
+                      <benefit.icon className="w-8 h-8 text-emerald-600" />
+                    </div>
+                    <CardTitle className="text-xl font-bold text-slate-900 mt-4">
+                      {benefit.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-slate-600 leading-relaxed">
+                      {benefit.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="px-6 py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-6">
+              So funktioniert's
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              In nur 4 einfachen Schritten zu Ihrer persönlichen Energieberatung
+            </p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-4 gap-8">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="text-center relative"
+              >
+                {index < steps.length - 1 && (
+                  <div className="hidden lg:block absolute top-8 left-full w-full h-0.5 bg-gradient-to-r from-emerald-200 to-cyan-200 transform -translate-x-1/2 z-0" />
+                )}
+                <div className="relative z-10 bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-300 h-full">
+                  <div className="w-16 h-16 mx-auto bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                    <span className="text-2xl font-bold text-white">{step.number}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-3">
+                    {step.title}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {step.description}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="px-6 py-20 bg-gradient-to-r from-emerald-600 to-emerald-700">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+              Bereit für Ihre Energiewende?
+            </h2>
+            <p className="text-xl text-emerald-100 mb-8 leading-relaxed">
+              Starten Sie jetzt Ihre kostenlose Energieberatung und entdecken Sie 
+              Ihr Einsparpotential
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to={createPageUrl("Wizard")}>
+                <Button size="lg" variant="secondary" className="bg-white text-emerald-700 hover:bg-emerald-50 px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Jetzt kostenlos starten
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+}
