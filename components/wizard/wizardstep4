@@ -1,0 +1,153 @@
+import React, { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, Zap, TrendingUp, Home, AlertCircle, FileImage, Sun, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function WizardStep4({ formData, onComplete }) {
+  const [analyzing, setAnalyzing] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState("Starte Analyse...");
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+
+  useEffect(() => {
+    performAnalysis();
+  }, []);
+
+  const performAnalysis = async () => {
+    const steps = [
+      "Gebäudedaten auswerten...",
+      "Energieverbrauch berechnen...",
+      formData.address ? "PV-Potenzial prüfen..." : null,
+      formData.floorplan_url ? "Grundriss analysieren..." : null,
+      formData.detail_photo_urls.length > 0 ? "Detailfotos auswerten..." : null,
+      "Sanierungsmaßnahmen bewerten...",
+      "Empfehlungen erstellen..."
+    ].filter(Boolean); // remove null steps
+
+    for (let i = 0; i < steps.length; i++) {
+      setCurrentStep(steps[i]);
+      setProgress(((i + 1) / steps.length) * 100);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    setAnalyzing(false);
+    setAnalysisComplete(true);
+  };
+
+  const analysisSteps = [
+    {
+      icon: Home,
+      title: "Gebäude & Verbrauch",
+      status: progress >= 20 ? "completed" : "active"
+    },
+    {
+      icon: Sun,
+      title: "PV-Potenzial", 
+      status: progress >= 40 ? "completed" : progress >= 20 ? "active" : "pending"
+    },
+    {
+      icon: FileImage,
+      title: "Pläne & Fotos",
+      status: progress >= 60 ? "completed" : progress >= 40 ? "active" : "pending"
+    },
+    {
+      icon: TrendingUp,
+      title: "Empfehlungen",
+      status: progress >= 80 ? "completed" : progress >= 60 ? "active" : "pending"
+    }
+  ];
+
+  if (analysisComplete) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="text-center space-y-8"
+      >
+        <div className="w-20 h-20 mx-auto bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center">
+          <Zap className="w-10 h-10 text-emerald-600" />
+        </div>
+        
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-4">
+            Analyse abgeschlossen! 🎉
+          </h2>
+          <p className="text-slate-600 text-lg mb-8">
+            Ihre individuelle Energieberatung ist fertig. Wir haben maßgeschneiderte 
+            Empfehlungen für Ihr Zuhause erstellt.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardContent className="p-6 text-center">
+              <div className="text-2xl font-bold text-green-700 mb-2">€2.400</div>
+              <div className="text-sm text-green-600">Geschätzte jährliche Einsparung</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+            <CardContent className="p-6 text-center">
+              <div className="text-2xl font-bold text-blue-700 mb-2">65%</div>
+              <div className="text-sm text-blue-600">Energieeffizienz-Potential</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-200">
+            <CardContent className="p-6 text-center">
+              <div className="text-2xl font-bold text-sky-700 mb-2">3.2t</div>
+              <div className="text-sm text-sky-600">CO₂-Einsparung pro Jahr</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Button 
+          size="lg" 
+          onClick={onComplete}
+          className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 px-8 py-4 text-lg font-semibold rounded-xl"
+        >
+          Ergebnisse anzeigen
+        </Button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="text-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-emerald-100 to-emerald-200 rounded-full flex items-center justify-center"
+        >
+          <Loader2 className="w-8 h-8 text-emerald-600" />
+        </motion.div>
+        
+        <h2 className="text-2xl font-bold text-slate-900 mb-4">
+          KI-Analyse läuft...
+        </h2>
+        <p className="text-slate-600 mb-2">{currentStep}</p>
+        <div className="max-w-md mx-auto bg-slate-200 rounded-full h-2 mb-8">
+          <motion.div
+            className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-2 rounded-full"
+            style={{ width: `${progress}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {analysisSteps.map((step, index) => (
+          <Card key={index} className={`border-2 transition-all duration-300 ${
+            step.status === 'completed' ? 'border-emerald-200 bg-emerald-50' :
+            step.status === 'active' ? 'border-cyan-200 bg-cyan-50' :
+            'border-slate-200 bg-slate-50'
+          }`}>
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                step.status === 'completed' ? 'bg-emerald-100' :
+                step.status === 'active' ? 'bg-cyan-100' :
+                'bg-slate-100'
+ 
