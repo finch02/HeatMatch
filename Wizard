@@ -1,0 +1,269 @@
+
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Property } from "@/entities/Property";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+import WizardStep1 from "../components/wizard/WizardStep1";
+import WizardStep2 from "../components/wizard/WizardStep2";
+import WizardStep3 from "../components/wizard/WizardStep3";
+import WizardStep4 from "../components/wizard/WizardStep4";
+
+export default function Wizard() {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    building_type: "",
+    construction_year: "",
+    living_space: "",
+    postal_code: "",
+    heating_system: "",
+    insulation_standard: "",
+    electricity_consumption: "",
+    heating_consumption: "",
+    heating_consumption_unit: "kwh",
+    address: "",
+    roof_type: "",
+    roof_orientation: "",
+    floorplan_url: "",
+    detail_photo_urls: {}
+  });
+
+  const steps = [
+    { title: "Gebäude & Verbrauch", description: "Basisdaten und Energieverbrauch" },
+    { title: "Dach & Standort", description: "Details für die PV-Analyse" },
+    { title: "Dokumente & Fotos", description: "Grundriss und Detailfotos hochladen" },
+    { title: "Analyse", description: "KI-Auswertung Ihrer Daten" }
+  ];
+
+  const updateFormData = (data) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  };
+
+  const nextStep = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const validateAndCleanData = (data) => {
+    const cleanedData = { ...data };
+    
+    // Convert empty strings to null for optional numeric fields or delete if truly empty
+    if (cleanedData.electricity_consumption === "" || cleanedData.electricity_consumption === null) {
+      delete cleanedData.electricity_consumption;
+    } else {
+      cleanedData.electricity_consumption = Number(cleanedData.electricity_consumption);
+      if (isNaN(cleanedData.electricity_consumption)) throw new Error("Stromverbrauch muss eine Zahl sein.");
+    }
+    
+    if (cleanedData.heating_consumption === "" || cleanedData.heating_consumption === null) {
+      delete cleanedData.heating_consumption;
+    } else {
+      cleanedData.heating_consumption = Number(cleanedData.heating_consumption);
+      if (isNaN(cleanedData.heating_consumption)) throw new Error("Heizenergieverbrauch muss eine Zahl sein.");
+    }
+    
+    // Convert required numeric fields, ensure they're valid
+    if (cleanedData.construction_year === "" || cleanedData.construction_year === null) {
+      throw new Error("Baujahr ist erforderlich.");
+    }
+    cleanedData.construction_year = Number(cleanedData.construction_year);
+    if (isNaN(cleanedData.construction_year)) throw new Error("Baujahr muss eine Zahl sein.");
+    
+    if (cleanedData.living_space === "" || cleanedData.living_space === null) {
+      throw new Error("Wohnfläche ist erforderlich.");
+    }
+    cleanedData.living_space = Number(cleanedData.living_space);
+    if (isNaN(cleanedData.living_space)) throw new Error("Wohnfläche muss eine Zahl sein.");
+    
+    // Remove empty optional string fields
+    if (cleanedData.address === "") delete cleanedData.address;
+    if (cleanedData.roof_type === "") delete cleanedData.roof_type;
+    if (cleanedData.roof_orientation === "") delete cleanedData.roof_orientation;
+    if (cleanedData.floorplan_url === "") delete cleanedData.floorplan_url;
+    if (cleanedData.heating_consumption_unit === "") delete cleanedData.heating_consumption_unit;
+    
+    // Ensure detail_photo_urls is an object
+    if (typeof cleanedData.detail_photo_urls !== 'object' || cleanedData.detail_photo_urls === null) {
+      cleanedData.detail_photo_urls = {};
+    }
+    
+    // Validate required fields
+    const requiredFields = ['building_type', 'heating_system', 'insulation_standard', 'postal_code'];
+    for (const field of requiredFields) {
+      if (!cleanedData[field] || cleanedData[field] === "") {
+        const fieldNames = {
+          building_type: "Gebäudetyp",
+          heating_system: "Heizsystem", 
+          insulation_standard: "Dämmstandard",
+          postal_code: "Postleitzahl"
+        };
+        throw new Error(`${fieldNames[field]} ist erforderlich.`);
+      }
+    }
+    
+    return cleanedData;
+  };
+
+  const completeWizard = async () => {
+    try {
+      const cleanedData = validateAndCleanData(formData);
+      cleanedData.analysis_status = "completed";
+      
+      const property = await Property.create(cleanedData);
+      navigate(createPageUrl(`Results?propertyId=${property.id}`));
+    } catch (error) {
+      console.error("Error creating property:", error);
+      alert(`Fehler beim Speichern der Daten: ${error.message}`);
+    }
+  };
+
+  // Checks if all required fields for Step 1 are filled
+  const canProceedStep1 = () => {
+    return formData.building_type && formData.construction_year && 
+           formData.living_space && formData.heating_system && 
+           formData.insulation_standard && formData.postal_code;
+  };
+
+  const renderStep = () => {
+    const stepProps = {
+      formData,
+      updateFormData,
+      onNext: nextStep,
+      onPrev: prevStep,
+      onComplete: completeWizard,
+      canProceed: canProceedStep1() // Pass canProceed to Step 1
+    };
+
+    switch (currentStep) {
+      case 1:
+        return <WizardStep1 {...stepProps} />;
+      case 2:
+        return <WizardStep2 {...stepProps} />;
+      case 3:
+        return <WizardStep3 {...stepProps} />;
+      case 4:
+        return <WizardStep4 {...stepProps} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
+              Energieberatung für Ihr Zuhause
+            </h1>
+            <p className="text-lg text-slate-600">
+              Schritt {currentStep} von {steps.length}: {steps[currentStep - 1].description}
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            {steps.map((step, index) => (
+              <div key={index} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                  index + 1 <= currentStep 
+                    ? 'bg-emerald-600 text-white shadow-lg' 
+                    : 'bg-slate-200 text-slate-500'
+                }`}>
+                  {index + 1 < currentStep ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    index + 1
+                  )}
+                </div>
+                <div className="ml-2 hidden sm:block">
+                  <div className={`text-sm font-semibold ${
+                    index + 1 <= currentStep ? 'text-emerald-600' : 'text-slate-500'
+                  }`}>
+                    {step.title}
+                  </div>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`w-16 lg:w-24 h-0.5 mx-4 transition-all duration-300 ${
+                    index + 1 < currentStep ? 'bg-emerald-600' : 'bg-slate-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          <Progress 
+            value={(currentStep / steps.length) * 100} 
+            className="h-2 bg-slate-200"
+          />
+        </div>
+
+        {/* Step Content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-slate-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-b border-slate-200">
+                <CardTitle className="text-2xl text-slate-900">
+                  {steps[currentStep - 1].title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                {renderStep()}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <div className="flex justify-between mt-8">
+          <Button
+            variant="outline"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className="px-6 py-3 rounded-xl font-semibold"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Zurück
+          </Button>
+          
+          {currentStep < 4 ? (
+            <Button
+              onClick={nextStep}
+              // Disable 'Weiter' button for Step 1 if not all required fields are filled
+              disabled={currentStep === 1 && !canProceedStep1()}
+              className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 px-6 py-3 rounded-xl font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Weiter
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
