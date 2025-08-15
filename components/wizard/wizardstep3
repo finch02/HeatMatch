@@ -1,0 +1,153 @@
+import React, { useState, useRef, useEffect } from "react";
+import { UploadFile } from "@/integrations/Core";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Upload, Camera, SkipForward, CheckCircle, AlertCircle, X, Loader2, FileUp, Sparkles, Wand2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const photoTasks = [
+    { key: "heizungsanlage", label: "Heizungsanlage", instruction: "Fotografieren Sie Ihre Heizungsanlage (Heizkessel, Wärmepumpe etc.)." },
+    { key: "heizkoerper", label: "Heizkörper", instruction: "Machen Sie ein Foto von einem typischen Heizkörper im Haus." },
+    { key: "fenster", label: "Fenster", instruction: "Fotografieren Sie ein typisches Fenster von innen, sodass der Rahmen sichtbar ist." },
+    { key: "fassade", label: "Fassade", instruction: "Machen Sie ein Foto von der Außenfassade Ihres Hauses." },
+    { key: "dach", label: "Dach", instruction: "Fotografieren Sie (wenn möglich) einen Teil Ihres Daches von außen." },
+];
+
+export default function WizardStep3({ formData, updateFormData, onNext }) {
+  const [mode, setMode] = useState(null); // 'camera' or 'upload'
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      setError("Kamera konnte nicht gestartet werden. Bitte Berechtigung prüfen oder manuelle Upload-Option nutzen.");
+      setMode('upload'); // Fallback to upload
+    }
+  };
+  
+  useEffect(() => {
+    if (mode === 'camera') {
+      startCamera();
+    }
+    return () => {
+      // Stop camera stream on cleanup
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [mode]);
+
+  const handleCapture = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    setUploading(true);
+    setError("");
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(async (blob) => {
+      const task = photoTasks[currentTaskIndex];
+      const file = new File([blob], `${task.key}-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      try {
+        const result = await UploadFile({ file });
+        const newPhotos = { ...formData.detail_photo_urls };
+        if (!newPhotos[task.key]) {
+          newPhotos[task.key] = [];
+        }
+        newPhotos[task.key].push(result.file_url);
+        updateFormData({ detail_photo_urls: newPhotos });
+        nextTask();
+      } catch (err) {
+        setError("Upload fehlgeschlagen.");
+      } finally {
+        setUploading(false);
+      }
+    }, 'image/jpeg');
+  };
+  
+  const handleManualUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      setUploading(true);
+      setError("");
+      try {
+          const result = await UploadFile({file});
+          updateFormData({ floorplan_url: result.file_url });
+      } catch(err) {
+          setError("Upload fehlgeschlagen.");
+      } finally {
+          setUploading(false);
+      }
+  }
+
+  const nextTask = () => {
+    if (currentTaskIndex < photoTasks.length - 1) {
+      setCurrentTaskIndex(currentTaskIndex + 1);
+    } else {
+      // Last task completed
+      setCurrentTaskIndex(photoTasks.length); // Move to "completed" state
+    }
+  };
+
+  const removePhoto = (category, index) => {
+    const newPhotos = { ...formData.detail_photo_urls };
+    newPhotos[category].splice(index, 1);
+    if (newPhotos[category].length === 0) {
+        delete newPhotos[category];
+    }
+    updateFormData({ detail_photo_urls: newPhotos });
+  };
+  
+  if (!mode) {
+      return (
+        <div className="text-center space-y-6">
+            <h3 className="text-2xl font-bold text-slate-800">Wie möchten Sie fortfahren?</h3>
+            <p className="text-slate-600">Für eine präzisere Analyse können Sie uns durch eine geführte Foto-Tour führen oder Dokumente manuell hochladen.</p>
+            <div className="grid md:grid-cols-2 gap-6">
+                <Card onClick={() => setMode('camera')} className="cursor-pointer hover:shadow-xl hover:border-emerald-500 transition-all duration-300">
+                    <CardContent className="p-8">
+                        <Wand2 className="w-12 h-12 mx-auto text-emerald-600 mb-4" />
+                        <h4 className="text-lg font-semibold">Geführte Foto-Tour</h4>
+                        <p className="text-sm text-slate-500">Unsere KI leitet Sie an, die richtigen Fotos zu machen. (Empfohlen)</p>
+                    </CardContent>
+                </Card>
+                 <Card onClick={() => setMode('upload')} className="cursor-pointer hover:shadow-xl hover:border-sky-500 transition-all duration-300">
+                    <CardContent className="p-8">
+                        <FileUp className="w-12 h-12 mx-auto text-sky-600 mb-4" />
+                        <h4 className="text-lg font-semibold">Manueller Upload</h4>
+                        <p className="text-sm text-slate-500">Laden Sie Grundrisse und Fotos selbst hoch.</p>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+      );
+  }
+
+  return (
+    <div className="space-y-6">
+        {mode === 'camera' && (
+            <Card className="bg-slate-900 overflow-hidden relative">
+                <video ref={videoRef} autoPlay playsInline className="w-full h-64 md:h-96 object-cover"></video>
+                <canvas ref={canvasRef} className="hidden"></canvas>
+                <AnimatePresence>
+                {currentTaskIndex < photoTasks.length && (
+                    <motion.div 
+                        key={currentTaskIndex}
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                        className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/70 to-transparent"
+                    >
+ 
