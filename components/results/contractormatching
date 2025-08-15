@@ -1,0 +1,61 @@
+import React, { useState, useEffect } from "react";
+import { Contractor } from "@/entities/Contractor";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Users, Phone, Mail, Star, MapPin } from "lucide-react";
+
+export default function ContractorMatching({ postalCode }) {
+  const [contractors, setContractors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadContractors();
+  }, [postalCode]);
+
+  const loadContractors = async () => {
+    setLoading(true);
+    try {
+        const existing = await Contractor.list();
+        if (existing.length > 0) {
+            setContractors(existing);
+            setLoading(false);
+            return;
+        }
+
+      // For MVP, we'll create some sample contractors
+      const sampleContractors = await Contractor.bulkCreate([
+        {
+          company_name: "EnergieExperten GmbH",
+          contact_person: "Thomas Müller",
+          specialties: ["heizung", "waermepumpe", "energieberatung"],
+          postal_codes: ["10115", "10117", "10119"],
+          phone: "+49 30 12345678",
+          email: "info@energie-experten.de",
+          website: "www.energie-experten.de",
+          rating: 4.8,
+          certifications: ["BAFA-Berater", "Wärmepumpen-Profi"],
+          description: "Spezialist für moderne Heizsysteme und Energieberatung"
+        },
+        {
+          company_name: "Solar & Mehr",
+          contact_person: "Andrea Schmidt",
+          specialties: ["solar", "solar"],
+          postal_codes: ["10115", "10117"],
+          phone: "+49 30 87654321",
+          email: "kontakt@solar-mehr.de",
+          website: "www.solar-mehr.de", 
+          rating: 4.6,
+          certifications: ["PV-Fachplaner", "Elektromeister"],
+          description: "Ihr Partner für Photovoltaik und Energiespeicher"
+        },
+        {
+          company_name: "Dämmprofi Berlin",
+          contact_person: "Michael Weber",
+          specialties: ["daemmung", "fenster"],
+          postal_codes: ["10115", "10117", "10119", "10121"],
+          phone: "+49 30 11111111",
+          email: "info@daemmprofi-berlin.de",
+          website: "www.daemmprofi-berlin.de",
+          rating: 4.9,
+ 
