@@ -1,0 +1,192 @@
+import React, { useState, useEffect } from "react";
+import { Contractor } from "@/entities/Contractor";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, MapPin, Star, Phone, Mail, Globe, Filter } from "lucide-react";
+import { motion } from "framer-motion";
+
+export default function Contractors() {
+  const [contractors, setContractors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [specialtyFilter, setSpecialtyFilter] = useState("all");
+  const [postalCodeFilter, setPostalCodeFilter] = useState("");
+
+  useEffect(() => {
+    loadContractors();
+  }, []);
+
+  const loadContractors = async () => {
+    try {
+      const contractorsData = await Contractor.list();
+      setContractors(contractorsData);
+    } catch (error) {
+      console.error("Error loading contractors:", error);
+      setContractors([]);
+    }
+    setLoading(false);
+  };
+
+  const specialties = [
+    { value: "all", label: "Alle Fachbereiche" },
+    { value: "heizung", label: "Heizung & Wärmepumpe" },
+    { value: "solar", label: "Solar & Photovoltaik" },
+    { value: "daemmung", label: "Wärmedämmung" },
+    { value: "fenster", label: "Fenster & Türen" },
+    { value: "energieberatung", label: "Energieberatung" }
+  ];
+
+  const specialtyColors = {
+    heizung: "bg-red-100 text-red-700",
+    waermepumpe: "bg-red-100 text-red-700",
+    solar: "bg-sky-100 text-sky-700",
+    batteriespeicher: "bg-sky-100 text-sky-700", 
+    daemmung: "bg-blue-100 text-blue-700",
+    fenster: "bg-green-100 text-green-700",
+    energieberatung: "bg-purple-100 text-purple-700",
+    elektrik: "bg-slate-100 text-slate-700"
+  };
+
+  const filteredContractors = contractors.filter(contractor => {
+    const matchesSearch = contractor.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         contractor.contact_person.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSpecialty = specialtyFilter === "all" || 
+                            contractor.specialties.some(s => s.includes(specialtyFilter));
+    const matchesPostalCode = !postalCodeFilter || 
+                             contractor.postal_codes.some(pc => pc.includes(postalCodeFilter));
+    
+    return matchesSearch && matchesSpecialty && matchesPostalCode;
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">Experten finden</h1>
+          <p className="text-slate-600 text-lg">
+            Qualifizierte Handwerker und Energieberater in Ihrer Region
+          </p>
+        </div>
+
+        {/* Search & Filter */}
+        <Card className="mb-8 border-slate-200">
+          <CardContent className="p-6">
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  placeholder="Firma oder Person suchen..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
+                <SelectTrigger>
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Fachbereich" />
+                </SelectTrigger>
+                <SelectContent>
+                  {specialties.map(specialty => (
+                    <SelectItem key={specialty.value} value={specialty.value}>
+                      {specialty.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <Input
+                  placeholder="PLZ eingeben..."
+                  value={postalCodeFilter}
+                  onChange={(e) => setPostalCodeFilter(e.target.value)}
+                  className="pl-10"
+                  maxLength="5"
+                />
+              </div>
+
+              <Button variant="outline" className="w-full">
+                <Search className="w-4 h-4 mr-2" />
+                Suchen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Results */}
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-slate-900">
+              {filteredContractors.length} Experten gefunden
+            </h2>
+          </div>
+
+          {filteredContractors.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                  <Search className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  Keine Experten gefunden
+                </h3>
+                <p className="text-slate-600">
+                  Versuchen Sie andere Suchkriterien oder erweitern Sie den Suchradius
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {filteredContractors.map((contractor, index) => (
+                <motion.div
+                  key={contractor.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <Card className="h-full hover:shadow-lg transition-all duration-300 border-slate-200">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-xl text-slate-900">
+                            {contractor.company_name}
+                          </CardTitle>
+                          <p className="text-slate-600 mt-1">{contractor.contact_person}</p>
+                        </div>
+                        <div className="flex items-center gap-1 bg-sky-50 px-2 py-1 rounded-lg">
+                          <Star className="w-4 h-4 text-sky-500 fill-current" />
+                          <span className="font-medium text-sky-700">{contractor.rating}</span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4">
+                      <p className="text-slate-600 text-sm leading-relaxed">
+                        {contractor.description}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {contractor.specialties.map((specialty, i) => (
+                          <Badge 
+                            key={i} 
+                            variant="secondary" 
+                            className={`${specialtyColors[specialty] || 'bg-slate-100 text-slate-700'} text-xs`}
+                          >
+                            {specialty.replace('_', ' ')}
+                          </Badge>
+                        ))}
+                      </div>
