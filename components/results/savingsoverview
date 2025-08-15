@@ -1,0 +1,61 @@
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp, Euro, Leaf } from "lucide-react";
+
+export default function SavingsOverview({ totalSavings, totalInvestment, totalCO2Reduction }) {
+  const paybackYears = Math.round(totalInvestment / totalSavings);
+  const savingsIn10Years = totalSavings * 10;
+  const co2In10Years = (totalCO2Reduction * 10) / 1000;
+
+  return (
+    <Card className="border-emerald-200 bg-gradient-to-b from-emerald-50 to-white">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-emerald-700">
+          <TrendingUp className="w-5 h-5" />
+          10-Jahres-Prognose
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-emerald-200">
+            <div className="flex items-center gap-2">
+              <Euro className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-medium">Gesamteinsparung</span>
+            </div>
+            <div className="font-bold text-green-700">€{savingsIn10Years.toLocaleString()}</div>
+          </div>
+          
+          <div className="flex justify-between items-center p-3 bg-white rounded-lg border border-emerald-200">
+            <div className="flex items-center gap-2">
+              <Leaf className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-medium">CO₂-Reduktion</span>
+            </div>
+            <div className="font-bold text-emerald-700">{co2In10Years.toFixed(1)}t</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-4 border border-emerald-200">
+          <h4 className="font-semibold text-slate-900 mb-3">Wichtige Erkenntnisse</h4>
+          <ul className="space-y-2 text-sm text-slate-600">
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-600 mt-0.5">✓</span>
+              Nach {paybackYears} Jahren amortisieren sich alle Investitionen
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-600 mt-0.5">✓</span>
+              Wärmepumpe bietet das beste Kosten-Nutzen-Verhältnis
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-600 mt-0.5">✓</span>
+              Ihr Dach eignet sich sehr gut für Solarenergie
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-600 mt-0.5">✓</span>
+              Förderungen können bis zu 70% der Kosten reduzieren
+            </li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
