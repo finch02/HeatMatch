@@ -1,0 +1,211 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { Property } from "@/entities/Property";
+import { Recommendation } from "@/entities/Recommendation";
+import { createPageUrl } from "@/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, TrendingUp, Euro, Leaf, Clock, Download, Share2 } from "lucide-react";
+
+import RecommendationCard from "../components/results/RecommendationCard";
+import SavingsOverview from "../components/results/SavingsOverview";
+import ContractorMatching from "../components/results/ContractorMatching";
+import ResultsCharts from "../components/results/ResultsCharts";
+
+export default function Results() {
+  const navigate = useNavigate();
+  const [property, setProperty] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('propertyId');
+    
+    async function loadData() {
+      setLoading(true);
+      if (propertyId) {
+        try {
+          const propertyData = await Property.get(propertyId);
+          setProperty(propertyData);
+          await loadRecommendations(propertyId);
+        } catch (error) {
+          console.error("Error loading property or recommendations:", error);
+          await generateMockRecommendations(propertyId); // Fallback
+        }
+      } else {
+          await generateMockRecommendations(null); // Fallback for no ID
+      }
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  const loadRecommendations = async (propertyId) => {
+      const existingRecommendations = await Recommendation.filter({ property_id: propertyId });
+      if (existingRecommendations.length > 0) {
+          setRecommendations(existingRecommendations);
+          setSelectedIds(new Set(existingRecommendations.map(r => r.id)));
+      } else {
+          await generateMockRecommendations(propertyId);
+      }
+  };
+
+  const generateMockRecommendations = async (propertyId) => {
+    const mockData = [
+      { property_id: propertyId, measure_type: "heizung_waermepumpe", title: "Wärmepumpe installieren", description: "Ersetzen Sie Ihre alte Heizung durch eine moderne Luft-Wasser-Wärmepumpe.", priority: "high", investment_cost: 18000, annual_savings: 1200, payback_years: 15, co2_reduction: 2800, funding_available: true, funding_details: "Bis zu 70% BAFA-Förderung möglich"},
+      { property_id: propertyId, measure_type: "daemmung_dach", title: "Dachdämmung verstärken", description: "Reduzieren Sie Wärmeverluste und sparen Sie Heizkosten.", priority: "high", investment_cost: 8500, annual_savings: 480, payback_years: 18, co2_reduction: 1200, funding_available: true, funding_details: "KfW-Förderung bis 20% der Kosten"},
+      { property_id: propertyId, measure_type: "solaranlage", title: "Photovoltaik-Anlage", description: "Nutzen Sie Ihr Dach für eine 8 kWp Solaranlage mit Speicher.", priority: "medium", investment_cost: 14000, annual_savings: 720, payback_years: 19, co2_reduction: 3200, funding_available: true, funding_details: "Keine MwSt. auf Solaranlagen"},
+      { property_id: propertyId, measure_type: "fenster_tausch", title: "Fenster modernisieren", description: "Tausch gegen moderne 3-fach-Verglasung.", priority: "medium", investment_cost: 12000, annual_savings: 380, payback_years: 32, co2_reduction: 900, funding_available: true, funding_details: "KfW-Zuschuss möglich"}
+    ];
+    try {
+      const created = await Recommendation.bulkCreate(mockData.map(r => ({...r, property_id: propertyId || "sample"})));
+      setRecommendations(created);
+      setSelectedIds(new Set(created.map(r => r.id)));
+    } catch (error) {
+      console.error("Error creating mock recommendations:", error);
+      const mockWithIds = mockData.map((r, i) => ({...r, id: `mock-${i}`}));
+      setRecommendations(mockWithIds);
+      setSelectedIds(new Set(mockWithIds.map(r => r.id)));
+    }
+  };
+
+  const handleToggleMeasure = (id) => {
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const selectedRecommendations = useMemo(() => {
+    return recommendations.filter(rec => selectedIds.has(rec.id));
+  }, [recommendations, selectedIds]);
+
+  const { totalSavings, totalInvestment, totalCO2Reduction } = useMemo(() => {
+    return selectedRecommendations.reduce((acc, rec) => ({
+      totalSavings: acc.totalSavings + (rec.annual_savings || 0),
+      totalInvestment: acc.totalInvestment + (rec.investment_cost || 0),
+      totalCO2Reduction: acc.totalCO2Reduction + (rec.co2_reduction || 0),
+    }), { totalSavings: 0, totalInvestment: 0, totalCO2Reduction: 0 });
+  }, [selectedRecommendations]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate(createPageUrl("Dashboard"))}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Ihre Energieberatung</h1>
+              <p className="text-slate-600">Interaktive Analyse & Maßnahmenplan</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" size="sm" onClick={() => alert("Funktion in Kürze verfügbar.")}>
+              <Share2 className="w-4 h-4 mr-2" />
+              Teilen
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Download className="w-4 h-4 mr-2" />
+              PDF Export
+            </Button>
+          </div>
+        </div>
+
+        {/* Overview Cards */}
+        <div className="grid lg:grid-cols-4 gap-6 mb-8">
+          {/* ... cards showing dynamic totals ... */}
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Euro className="w-5 h-5 text-green-600" />
+                <span className="text-sm font-medium text-green-600">Jährliche Einsparung</span>
+              </div>
+              <div className="text-2xl font-bold text-green-700">€{totalSavings.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-blue-50 to-cyan-50 border-blue-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">Investition</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-700">€{totalInvestment.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Leaf className="w-5 h-5 text-emerald-600" />
+                <span className="text-sm font-medium text-emerald-600">CO₂-Einsparung</span>
+              </div>
+              <div className="text-2xl font-bold text-emerald-700">{(totalCO2Reduction/1000).toFixed(1)}t</div>
+              <div className="text-xs text-emerald-600 mt-1">pro Jahr</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-sky-50 to-indigo-50 border-sky-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Clock className="w-5 h-5 text-sky-600" />
+                <span className="text-sm font-medium text-sky-600">Amortisation</span>
+              </div>
+              <div className="text-2xl font-bold text-sky-700">
+                {totalSavings > 0 ? Math.round(totalInvestment / totalSavings) : 'N/A'} Jahre
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <ResultsCharts recommendations={selectedRecommendations} />
+
+        <div className="grid lg:grid-cols-3 gap-8 mt-8">
+          {/* Recommendations */}
+          <div className="lg:col-span-2 space-y-6">
+            <h2 className="text-2xl font-bold text-slate-900">Empfohlene Maßnahmen (zum Simulieren klicken)</h2>
+            <div className="space-y-4">
+              {recommendations.map((recommendation) => (
+                  <RecommendationCard 
+                    key={recommendation.id} 
+                    recommendation={recommendation}
+                    isSelected={selectedIds.has(recommendation.id)}
+                    onToggle={() => handleToggleMeasure(recommendation.id)}
+                  />
+              ))}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <SavingsOverview 
+              totalSavings={totalSavings}
+              totalInvestment={totalInvestment}
+              totalCO2Reduction={totalCO2Reduction}
+            />
+            <ContractorMatching postalCode={property?.postal_code} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
